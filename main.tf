@@ -91,3 +91,109 @@ module "blog_sg" {
   egress_rules = ["all-all"]
   egress_cidr_blocks = ["0.0.0.0/0"]
 }
+
+# Create a security group for the Cuckoo instance
+resource "aws_security_group" "cuckoo_sg" {
+  name_prefix = "cuckoo-sg-"
+
+  # Example rule to allow SSH and Cuckoo ports (adjust as needed)
+  ingress {
+    from_port   = 22
+    to_port     = 8090
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]  # Replace with your private subnet CIDR block
+  }
+}
+
+# Create an EC2 instance for Cuckoo Sandbox in the private subnet
+resource "aws_instance" "cuckoo_instance" {
+  ami           = "ami-0123456789abcdef0"  # Replace with your Cuckoo AMI ID
+  instance_type = "t2.medium"              # Choose an appropriate instance type
+  subnet_id     = "subnet-0123456789abcdef1"  # Replace with your private subnet ID
+
+  security_groups = [aws_security_group.cuckoo_sg.name]
+
+  key_name = "your-key-pair-name"  # Replace with your SSH key pair name
+
+  user_data = <<-EOF
+              #!/bin/bash
+              # Sample user data script for Cuckoo installation and configuration
+              # Replace with actual installation and configuration steps
+              EOF
+}
+
+# Create a Network ACL for the private subnet (adjust rules as needed)
+resource "aws_network_acl" "private_subnet_acl" {
+  subnet_id = "subnet-0123456789abcdef1"  # Replace with your private subnet ID
+
+  # Example rule to allow outbound traffic to specific IP ranges
+  egress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Adjust as needed
+    rule_action = "allow"
+  }
+
+  # Add more rules as required for your use case
+}
+
+# Create a Route Table for the private subnet and associate it with the subnet
+resource "aws_route_table" "private_subnet_route_table" {
+  vpc_id = "vpc-0123456789abcdef2"  # Replace with your VPC ID
+
+  # Example route to send traffic to the internet through an internet gateway
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "igw-0123456789abcdef3"  # Replace with your internet gateway ID
+  }
+}
+
+# Associate the private subnet with the private subnet's route table
+resource "aws_subnet_association" "private_subnet_association" {
+  subnet_id      = "subnet-0123456789abcdef1"  # Replace with your private subnet ID
+  route_table_id = aws_route_table.private_subnet_route_table.id
+}
+
+# Create a security group for the firewall (adjust rules as needed)
+resource "aws_security_group" "firewall_sg" {
+  name_prefix = "firewall-sg-"
+
+  # Example rule to allow incoming traffic from the private subnet
+  ingress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]  # Replace with your private subnet CIDR block
+  }
+
+  # Add more rules as needed for the firewall
+}
+
+# Create the firewall EC2 instance in the public subnet with appropriate user data
+resource "aws_instance" "firewall_instance" {
+  ami           = "ami-0123456789abcdef4"  # Replace with your firewall AMI ID
+  instance_type = "t2.micro"               # Choose an appropriate instance type
+  subnet_id     = "subnet-0123456789abcdef5"  # Replace with your public subnet ID
+
+  security_groups = [aws_security_group.firewall_sg.name]
+
+  key_name = "your-key-pair-name"  # Replace with your SSH key pair name
+
+  user_data = <<-EOF
+              #!/bin/bash
+              # Sample user data script for firewall installation and configuration
+              # Replace with actual installation and configuration steps
+              EOF
+}
+
+# Create logs for Cuckoo instance (adjust as needed)
+resource "aws_cloudwatch_log_group" "cuckoo_logs" {
+  name = "/var/log/cuckoo"
+}
+
+# Create a CloudWatch log stream for Cuckoo logs (adjust as needed)
+resource "aws_cloudwatch_log_stream" "cuckoo_log_stream" {
+  name           = "cuckoo"
+  log_group_name = aws_cloudwatch_log_group.cuckoo_logs.name
+}
