@@ -147,7 +147,9 @@ resource "aws_instance" "cuckoo_instance" {
               cuckoo -d
               EOF
 }
-
+data "aws_instance" "cuckoo_instance" {
+  instance_id = aws_instance.cuckoo_instance.id
+}
 # Create logs for Cuckoo instance (adjust as needed)
 resource "aws_cloudwatch_log_group" "cuckoo_logs" {
   name = "/var/log/cuckoo"
