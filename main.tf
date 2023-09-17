@@ -130,7 +130,7 @@ resource "aws_instance" "cuckoo_instance" {
 }
 resource "aws_subnet" "private_subnetforCucko" {
   vpc_id     = aws_vpc.Cuckoo_VPC.id
-  cidr_block = "192.168.1.0/16"
+  cidr_block = "192.168.1.0/22"
 
   tags = {
     Name = "Main"
