@@ -138,7 +138,6 @@ resource "aws_subnet" "private_subnetforCucko" {
 }
 # Create a Network ACL for the private subnet (adjust rules as needed)
 resource "aws_network_acl" "private_subnet_acl" {
-  subnet_id =   # Replace with your private subnet ID
   vpc_id    = aws_vpc.Cuckoo_VPC
   # Example rule to allow outbound traffic to specific IP ranges
   egress {
