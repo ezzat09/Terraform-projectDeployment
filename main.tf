@@ -99,7 +99,6 @@ module "blog_sg" {
   egress_cidr_blocks = ["0.0.0.0/0"]
 }
 
-# Create a security group for the Cuckoo instance
 resource "aws_security_group" "cuckoo_sg" {
   name_prefix = "cuckoo-sg-"
 
@@ -108,12 +107,12 @@ resource "aws_security_group" "cuckoo_sg" {
     from_port   = 22
     to_port     = 8090
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]  # Replace with your private subnet CIDR block
+    cidr_blocks = ["192.168.0.0/16"]  # Replace with your private subnet CIDR block
   }
 }
 resource "aws_subnet" "private_subnetforCucko" {
   vpc_id     = aws_vpc.Cuckoo_VPC.id
-  cidr_block = "10.1.0.0/16"
+  cidr_block = "192.168.0.0/16"
 
   tags = {
     Name = "Main"
@@ -121,13 +120,13 @@ resource "aws_subnet" "private_subnetforCucko" {
 }
 # Create an EC2 instance for Cuckoo Sandbox in the private subnet
 resource "aws_instance" "cuckoo_instance" {
-  ami           = "ami-0123456789abcdef0"  # Replace with your Cuckoo AMI ID
-  instance_type = "t2.medium"              # Choose an appropriate instance type
+  ami           = "ami-0123456789abcdef0"  
+  instance_type = "t3.nano"              
   subnet_id     = aws_subnet.private_subnetforCucko.id # Replace with your private subnet ID
 
   security_groups = [aws_security_group.cuckoo_sg.name]
 
-  key_name = "cuckoo-ssh-key"  # Replace with your SSH key pair name
+  key_name = "cuckoo-ssh-key"  
 
   user_data = <<-EOF
               #!/bin/bash
