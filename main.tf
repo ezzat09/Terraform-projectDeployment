@@ -123,7 +123,7 @@ resource "aws_subnet" "private_subnetforCucko" {
 resource "aws_instance" "cuckoo_instance" {
   ami           = "ami-0123456789abcdef0"  # Replace with your Cuckoo AMI ID
   instance_type = "t2.medium"              # Choose an appropriate instance type
-  subnet_id     = aws_subnet.private_subnetforCucko # Replace with your private subnet ID
+  subnet_id     = aws_subnet.private_subnetforCucko.id # Replace with your private subnet ID
 
   security_groups = [aws_security_group.cuckoo_sg.name]
 
