@@ -121,7 +121,7 @@ resource "aws_subnet" "private_subnetforCucko" {
 # Create an EC2 instance for Cuckoo Sandbox in the private subnet
 resource "aws_instance" "cuckoo_instance" {
   ami           = "ubuntu"  
-  instance_type = "t3.nano"              
+  instance_type = "t2.medium"              
   subnet_id     = aws_subnet.private_subnetforCucko.id # Replace with your private subnet ID
   security_groups = [aws_security_group.cuckoo_sg.name]
 
