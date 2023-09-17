@@ -127,7 +127,7 @@ resource "aws_instance" "cuckoo_instance" {
 
   security_groups = [aws_security_group.cuckoo_sg.name]
 
-  key_name = "your-key-pair-name"  # Replace with your SSH key pair name
+  key_name = "cuckoo-ssh-key"  # Replace with your SSH key pair name
 
   user_data = <<-EOF
               #!/bin/bash
