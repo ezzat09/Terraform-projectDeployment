@@ -111,12 +111,19 @@ resource "aws_security_group" "cuckoo_sg" {
     cidr_blocks = ["10.0.0.0/16"]  # Replace with your private subnet CIDR block
   }
 }
+resource "aws_subnet" "private_subnetforCucko" {
+  vpc_id     = aws_vpc.Cuckoo_VPC.id
+  cidr_block = "10.1.0.0/16"
 
+  tags = {
+    Name = "Main"
+  }
+}
 # Create an EC2 instance for Cuckoo Sandbox in the private subnet
 resource "aws_instance" "cuckoo_instance" {
   ami           = "ami-0123456789abcdef0"  # Replace with your Cuckoo AMI ID
   instance_type = "t2.medium"              # Choose an appropriate instance type
-  subnet_id     = "subnet-0123456789abcdef1"  # Replace with your private subnet ID
+  subnet_id     = aws_subnet.private_subnetforCucko # Replace with your private subnet ID
 
   security_groups = [aws_security_group.cuckoo_sg.name]
 
@@ -126,80 +133,18 @@ resource "aws_instance" "cuckoo_instance" {
               #!/bin/bash
               # Sample user data script for Cuckoo installation and configuration
               # Replace with actual installation and configuration steps
-              EOF
-}
-resource "aws_subnet" "private_subnetforCucko" {
-  vpc_id     = aws_vpc.Cuckoo_VPC.id
-  cidr_block = "192.168.1.0/22"
+              sudo apt-get update -y
+              sudo apt-get upgrade -y
+              sudo apt-get install -y python python-pip python-dev python-virtualenv libffi-dev libssl-dev build-essential
 
-  tags = {
-    Name = "Main"
-  }
-}
-# Create a Network ACL for the private subnet (adjust rules as needed)
-resource "aws_network_acl" "private_subnet_acl" {
-  vpc_id    = aws_vpc.Cuckoo_VPC
-  # Example rule to allow outbound traffic to specific IP ranges
-  egress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Adjust as needed
-    rule_action = "allow"
-  }
+              # Install Cuckoo dependencies
+              sudo apt-get install -y libjpeg-dev zlib1g-dev swig ssdeep tcpdump mongodb
 
-  # Add more rules as required for your use case
-}
-resource "aws_network_acl_association" "CUCKoomain" {
-  network_acl_id = aws_network_acl.CUCKoomain.id
-  subnet_id      = aws_subnet.private_subnetforCucko
-}
-# Create a Route Table for the private subnet and associate it with the subnet
-resource "aws_route_table" "private_subnet_route_table" {
-  vpc_id = "vpc-0123456789abcdef2"  # Replace with your VPC ID
+              # Install Cuckoo Sandbox
+              sudo pip install cuckoo
 
-  # Example route to send traffic to the internet through an internet gateway
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = "igw-0123456789abcdef3"  # Replace with your internet gateway ID
-  }
-}
-
-# Associate the private subnet with the private subnet's route table
-resource "aws_route_table_association" "private_subnet_association" {
-  subnet_id      = "subnet-0123456789abcdef1"  # Replace with your private subnet ID
-  route_table_id = aws_route_table.private_subnet_route_table.id
-}
-
-# Create a security group for the firewall (adjust rules as needed)
-resource "aws_security_group" "firewall_sg" {
-  name_prefix = "firewall-sg-"
-
-  # Example rule to allow incoming traffic from the private subnet
-  ingress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]  # Replace with your private subnet CIDR block
-  }
-
-  # Add more rules as needed for the firewall
-}
-
-# Create the firewall EC2 instance in the public subnet with appropriate user data
-resource "aws_instance" "firewall_instance" {
-  ami           = "ami-0123456789abcdef4"  # Replace with your firewall AMI ID
-  instance_type = "t2.micro"               # Choose an appropriate instance type
-  subnet_id     = "subnet-0123456789abcdef5"  # Replace with your public subnet ID
-
-  security_groups = [aws_security_group.firewall_sg.name]
-
-  key_name = "your-key-pair-name"  # Replace with your SSH key pair name
-
-  user_data = <<-EOF
-              #!/bin/bash
-              # Sample user data script for firewall installation and configuration
-              # Replace with actual installation and configuration steps
+              # Start Cuckoo
+              cuckoo -d
               EOF
 }
 
