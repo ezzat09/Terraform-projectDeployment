@@ -144,7 +144,7 @@ resource "aws_instance" "cuckoo_instance" {
               sudo pip install cuckoo
 
               # Start Cuckoo
-              cuckoo -d
+              cuckoo -d > /tmp/cuckoo_output.txt
               EOF
 }
 data "aws_instance" "cuckoo_instance" {
