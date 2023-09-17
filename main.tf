@@ -14,7 +14,14 @@ data "aws_ami" "app_ami" {
   owners = [var.ami_filter.owner]
 }
 
+resource "aws_vpc" "Cuckoo_VPC" {
+  cidr_block       = "192.168.0.0/16"
+  instance_tenancy = "default"
 
+  tags = {
+    Name = "Cuckoo_PrivateVPC"
+  }
+}
 module "blog_vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -125,7 +132,7 @@ resource "aws_instance" "cuckoo_instance" {
 # Create a Network ACL for the private subnet (adjust rules as needed)
 resource "aws_network_acl" "private_subnet_acl" {
   subnet_id = "subnet-0123456789abcdef1"  # Replace with your private subnet ID
-
+  vpc_id    = Cuckoo_VPC
   # Example rule to allow outbound traffic to specific IP ranges
   egress {
     from_port   = 0
@@ -150,7 +157,7 @@ resource "aws_route_table" "private_subnet_route_table" {
 }
 
 # Associate the private subnet with the private subnet's route table
-resource "aws_subnet_association" "private_subnet_association" {
+resource "aws_route_table_association" "private_subnet_association" {
   subnet_id      = "subnet-0123456789abcdef1"  # Replace with your private subnet ID
   route_table_id = aws_route_table.private_subnet_route_table.id
 }
